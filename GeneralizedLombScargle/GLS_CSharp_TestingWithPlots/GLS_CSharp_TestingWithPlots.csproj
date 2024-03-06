@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+	  <UseWPF>true</UseWPF>
+	  <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GLS_CSharp_Testing\DataSeriesExample.cs" Link="DataSeriesExample.cs" />
+    <Compile Include="..\GLS_CSharp_Testing\HarmonicWithNoise.cs" Link="HarmonicWithNoise.cs" />
+    <Compile Include="..\GLS_CSharp_Testing\MultiHarmonics.cs" Link="MultiHarmonics.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OxyPlot.Wpf" Version="2.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GeneralizedLombScargle\GeneralizedLombScargle.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Window2DPlot.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+
+</Project>
