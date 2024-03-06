@@ -15,13 +15,7 @@ namespace GLS_CSharp_TestingWithPlots
         public Window2DPlot()
         {
             Model = new PlotModel();
-            //InitializeComponent();
-            //DataContext = this;
         }
-        /// <summary>
-        ///     Gets or sets the model.
-        /// </summary>
-        /// <value>The model.</value>
         public PlotModel Model { get; set; }
 
         public static void ShowPlot(IEnumerable<IEnumerable<Vector2>> listOfArrayOfPoints,
@@ -91,7 +85,13 @@ namespace GLS_CSharp_TestingWithPlots
             var t = typeof(OxyColors);
             var r = new Random();
             return t.GetRuntimeFields().Where(fi => fi.IsPublic && fi.IsStatic && fi.GetValue(null) is OxyColor)
-                    .OrderBy(fi => r.Next()).Select(fi => (OxyColor)fi.GetValue(null));
+                    .OrderBy(fi => r.Next())
+                    .Where(fi =>
+                    {
+                        var color = (OxyColor)fi.GetValue(null);
+                        return color.R+color.G+color.B <200;
+                    })
+                    .Select(fi => (OxyColor)fi.GetValue(null));
         }
     }
 }

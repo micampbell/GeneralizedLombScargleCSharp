@@ -9,26 +9,26 @@ namespace GLS_CSharp_Testing
 {
     internal static class HarmonicWithNoise
     {
-        internal static (double[] frequencies, double[] powers) Test(out double[] times, out double[] values)
+        internal static (double[] frequencies, double[] powers) Test(out IList<double> times, out IList<double> values)
         {
-            var amplitude = 12.0;
-            var phase = Math.PI / 5;
+            var amplitude = 7.0;
+            var phase = 3*Math.PI / 5;
             var frequency = 1.8;
             var offset = 4.5;
-            var noiseAmplitude = 0.001;
+            var noiseAmplitude = 2;
             var rng = new Random();
             var n = 1000;
             times = new double[n];
             values = new double[n];
             for (int i = 0; i < n; i++)
             {
-                times[i] = i / 100.0;
+                times[i] = i / 500.0;
                 values[i] = offset + amplitude * Math.Sin(2 * Math.PI * frequency * times[i] + phase) + noiseAmplitude * rng.NextDouble();
             }
-            var periodogram = new Periodogram(0.0, 3, frequencyStepSize: 0.01);
+            var periodogram = new Periodogram(0.0, 5, frequencyStepSize: 0.01);
             var powers = periodogram.CalculatePowers(times, values);
 
-            var power = periodogram.GetHighestPower(out var predictedFrequency, out var predictedAmplitude, out var predictedPhase, out var predictedOffset);
+            var power = periodogram.GetLargestHarmonic(out var predictedFrequency, out var predictedAmplitude, out var predictedPhase, out var predictedOffset);
             Console.WriteLine("best power: " + power);
             Console.WriteLine("frequency: predicted = " + predictedFrequency + "  ;   actual = " + frequency);
             Console.WriteLine("amplitude: predicted = " + predictedAmplitude + "  ;   actual = " + amplitude);

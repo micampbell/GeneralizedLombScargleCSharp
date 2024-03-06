@@ -1,39 +1,47 @@
 ﻿using GeneralizedLombScargle;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace GLS_CSharp_Testing
 {
     internal static class DataSeriesExample
     {
-        internal static (double[] frequencies, double[] powers) Test(out double[] times, out double[] values)
+        internal static (double[] frequencies, double[] powers) Test(out IList<double> times, 
+            out IList<double> values)
         {
-            var amplitude = 12.0;
-            var phase = Math.PI / 5;
-            var frequency = 1.8;
-            var offset = 4.5;
-            var noiseAmplitude = 0.001;
-            var rng = new Random();
-            var n = 1000;
-            times = new double[n];
-            values = new double[n];
-            for (int i = 0; i < n; i++)
+            FileInfo[] files;
+            var dir = new DirectoryInfo(".");
+            do
             {
-                times[i] = i / 100.0;
-                values[i] = offset + amplitude * Math.Sin(2 * Math.PI * frequency * times[i] + phase) + noiseAmplitude * rng.NextDouble();
+                 files = dir.GetFiles("*.csv");
+                if (files.Length > 0)
+                    break;
+                dir = dir.Parent;
             }
-            var periodogram = new Periodogram(0.0, 3, frequencyStepSize: 0.01);
+            while (dir != null);
+             times  = new List<double>();
+            values = new List<double>();
+            var errors = new List<double>();
+            foreach (var file in files)
+            {
+                Console.WriteLine(file.FullName);
+                var lines=  File.ReadAllLines(file.FullName);
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(',');
+                    times.Add(double.Parse(parts[0]));
+                    values.Add(double.Parse(parts[1]));
+                    errors.Add(double.Parse(parts[2]));
+                }
+            }
+            var periodogram = new Periodogram(0.001, 0.008, numberOfFrequencySteps: 5000);
             var powers = periodogram.CalculatePowers(times, values);
 
-            var power = periodogram.GetHighestPower(out var predictedFrequency, out var predictedAmplitude, out var predictedPhase, out var predictedOffset);
+            var power = periodogram.GetLargestHarmonic(out var predictedFrequency, out var predictedAmplitude, out var predictedPhase, out var predictedOffset);
             Console.WriteLine("best power: " + power);
-            Console.WriteLine("frequency: predicted = " + predictedFrequency + "  ;   actual = " + frequency);
-            Console.WriteLine("amplitude: predicted = " + predictedAmplitude + "  ;   actual = " + amplitude);
-            Console.WriteLine("phase: predicted = " + predictedPhase + "  ;   actual = " + phase);
-            Console.WriteLine("offset: predicted = " + predictedOffset + "  ;   actual = " + offset);
+            Console.WriteLine("frequency: predicted = " + predictedFrequency );
+            Console.WriteLine("amplitude: predicted = " + predictedAmplitude);
+            Console.WriteLine("phase: predicted = " + predictedPhase);
+            Console.WriteLine("offset: predicted = " + predictedOffset);
             return (periodogram.Frequencies, powers);
         }
     }

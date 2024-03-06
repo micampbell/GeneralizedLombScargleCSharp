@@ -40,21 +40,23 @@
             {
                 NumberOfFrequencies = numberOfFrequencySteps;
                 Frequencies = new double[NumberOfFrequencies];
+                // the minus 1 is because the number of steps is the number of fence posts, not the number of intervals
+                // e.g. if given 0 start, 10 end, and 11 steps, then the interval should be 1
                 frequencyStep = (endFrequency - startFrequency) / (NumberOfFrequencies - 1);
             }
-            else
+            else // frequencyStepSize is provided
             {
                 frequencyStep = frequencyStepSize;
                 var freqRange = endFrequency - startFrequency;
                 NumberOfFrequencies = (int)(freqRange / frequencyStepSize);
                 var lastFencePostExists = (freqRange % frequencyStepSize) / frequencyStepSize < 0.001;
-                if (lastFencePostExists)
+                if (lastFencePostExists) // if the last fence post is at the endFrequency
                     NumberOfFrequencies++;
             }
             Frequencies = new double[NumberOfFrequencies];
             for (int i = 0; i < NumberOfFrequencies; i++)
             {
-                Frequencies[i] = startFrequency + i * frequencyStepSize;
+                Frequencies[i] = startFrequency + i * frequencyStep;
             }
         }
 
@@ -84,12 +86,12 @@
             double[] sinx = new double[n];
             foreach (var f in Frequencies)
             {
-                var C = 0.0;
-                var S = 0.0;
+                var C = 0.0; // The paper defines constants C is sum of the cosines
+                var S = 0.0; // S is sum of the sines
                 var YC = 0.0;
                 var YS = 0.0;
-                var CC = 0.0;
-                var CS = 0.0;
+                var CC = 0.0; // cosine squared
+                var CS = 0.0; // cosine times sine
 
                 for (int i = 0; i < n; i++)
                 {
@@ -124,7 +126,7 @@
                 powers[k++] = power;
                 if (bestPower < power)
                 {
-                    // keep track of highest power 
+                    // keep track of highest power in case the user wants to know details on the highest frequency
                     bestPower = power;
                     bestFreq = f;
                     bestC = C;
@@ -140,7 +142,17 @@
         }
         double bestPower, bestC, bestS, bestYC, bestSS, bestYS, bestCC, bestCS, Y, bestFreq;
 
-        public double GetHighestPower(out double frequency, out double amplitude, out double phase,
+        /// <summary>
+        /// Following the calculation of the power spectrum, this method can be called to get the details of 
+        /// the frquency with the highest power.
+        /// </summary>
+        /// <param name="frequency">in cycles per second (Hz)</param>
+        /// <param name="amplitude">dimensionless length of input data</param>
+        /// <param name="phase">radians in the start phase</param>
+        /// <param name="offset">dimensionless length to the center of the signal</param>
+        /// <returns>The normalized power (zero to 1) of this frequency. If it is low (e.g. ~0.5), then its mostly noise.
+        /// If greater than 0.99 then nearly pure signal.</returns>
+        public double GetLargestHarmonic(out double frequency, out double amplitude, out double phase,
             out double offset)
         {
             var D = bestCC * bestSS - bestCS * bestCS;      // Eq. (6) 
@@ -150,7 +162,7 @@
 
             amplitude = Math.Sqrt(a * a + b * b);
             frequency = bestFreq;
-            phase = Math.Atan2(b, a);
+            phase = Math.Atan2(a,b);
             offset = Y - a * bestC - b * bestS; // parenthetical equation between A.3 and A.4
 
             return bestPower;
@@ -158,7 +170,7 @@
 
         private void CalculateFrequenceIndependentTerms(IList<double> timesArray, IList<double> valuesArray, int n, double[] w, double wSum, out double YY, out double[] wy, out double[] cosdx, out double[] sindx)
         {
-            var Y = 0.0;
+            Y = 0.0;
             for (int i = 0; i < n; i++)
             {
                 // mean 
@@ -180,7 +192,6 @@
                 // Prepare trigonometric recurrences cos(dx)+i sin(dx) 
                 cosdx[i] = Math.Cos(Math.Tau * frequencyStep * time);
                 sindx[i] = Math.Sin(Math.Tau * frequencyStep * time);
-                i++;
             }
         }
 
